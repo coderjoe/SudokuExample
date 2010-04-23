@@ -14,6 +14,9 @@ public class Game extends Activity {
 	public static final int DIFFICULTY_MEDIUM = 1;
 	public static final int DIFFICULTY_HARD = 2;
 	
+	public static final String PREF_PUZZLE = "puzzle";
+	public static final int DIFFICULTY_CONTINUE = -1;
+	
 	private int puzzle[] = new int[9*9];
 	private final int used[][][] = new int[9][9][];
 	
@@ -31,6 +34,8 @@ public class Game extends Activity {
 		puzzleView = new PuzzleView(this);
 		setContentView(puzzleView);
 		puzzleView.requestFocus();
+		
+		getIntent().putExtra(KEY_DIFFICULTY, DIFFICULTY_CONTINUE);
 	}
 	
 	protected void showKeypadOrError( int x, int y) {
@@ -132,8 +137,11 @@ public class Game extends Activity {
 	
 	private int[] getPuzzle(int diff) {
 		String puz;
-		//TODO: continue last game
 		switch(diff) {
+		case DIFFICULTY_CONTINUE:
+			puz = getPreferences(MODE_PRIVATE).getString(PREF_PUZZLE, 
+					easyPuzzle);
+			break;
 		case DIFFICULTY_HARD:
 			puz = hardPuzzle;
 			break;
@@ -183,5 +191,22 @@ public class Game extends Activity {
 			return "";
 		else
 			return String.valueOf(v);
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		Log.d(TAG, "onPause");
+		Music.stop(this);
+		
+		//Save the current puzzle
+		getPreferences(MODE_PRIVATE).edit().putString(PREF_PUZZLE, 
+				toPuzzleString(puzzle)).commit();
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		Music.play(this,R.raw.game);
 	}
 }
